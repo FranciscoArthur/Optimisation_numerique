@@ -76,15 +76,24 @@ r          = size(D,2)                                                     ;
 k          =   0                                                           ;
 fin        =   0                                                           ;
 while(fin==0 && k < un_nit_max)
-    %
-    % A completer 
-    %
+    tempx_next = ...
+    
+    if(alpha <= 10^6) 
+        fin =  1                                                           ;
+    end
+    
+    if(abs((feval(une_f,tempx_next) - feval(une_f,tempx))/(tempx_next - tempx)) <= 10^6) % erreur
+        fin =  2                                                           ;
+    end
+    
     if(f_count >= un_f_count_max)
         fin =  4                                                           ;
     end
+    
     if(k==un_nit_max)
         fin =  3                                                           ;
     end
+    
     k = k +1 ;
 end
 x_opt    =   tempx                                                         ;
