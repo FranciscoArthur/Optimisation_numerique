@@ -94,9 +94,44 @@ fin        =   0                                                           ;
 % -------------------- Generation Loop --------------------------------
 
 while(fin==0 && k < un_nit_max)
-    %
-    % A Completer
-    %
+    
+% Generate and evaluate lambda offspring
+    for k=1:lambda
+        arx(:,k) = xmean + sigma_es * B * (D .* randn(N,1)); % m + sigma^ES * Normal(0,C)
+        arfitness(k) = feval(une_f, arx(:,k)); % objective function call
+    end
+    
+    % Sort by fitness and compute weighted mean into xmean
+    [arfitness, arindex] = sort(arfitness);  % minimization
+    xold = xmean;
+    xmean = arx(:,arindex(1:mu)) * weights;  % recombination, new mean value
+    
+    % Cumulation: Update evolution paths
+    ps = (1-cs) * ps ...
+        + sqrt(cs*(2-cs)*mueff) * invsqrtC * (xmean-xold) / sigma_es;
+    hsig = sum(ps.^2)/(1-(1-cs)^(2*f_count/lambda))/N < 2 + 4/(N+1);
+    pc = (1-cc) * pc ...
+        + hsig * sqrt(cc*(2-cc)*mueff) * (xmean-xold) / sigma_es;
+    
+    % Adapt covariance matrix C
+    artmp = (1/sigma_es) * (arx(:,arindex(1:mu)) - repmat(xold,1,mu));  % mu difference vectors
+    C = (1-c1-cmu) * C ...                   % regard old matrix
+        + c1 * (pc * pc' ...                % plus rank one update
+        + (1-hsig) * cc*(2-cc) * C) ... % minor correction if hsig==0
+        + cmu * artmp * diag(weights) * artmp'; % plus rank mu update
+    
+    % Adapt step size sigma
+    sigma_es = sigma_es * exp((cs/damps)*(norm(ps)/chiN - 1));
+    
+    % Update B and D from C
+    if f_count - eigeneval > lambda/(c1+cmu)/N/10  % to achieve O(N^2)
+        eigeneval = f_count;
+        C = triu(C) + triu(C,1)'; % enforce symmetry
+        [B,D] = eig(C);           % eigen decomposition, B==normalized eigenvectors
+        D = sqrt(diag(D));        % D contains standard deviations now
+        invsqrtC = B * diag(D.^-1) * B';
+    end
+    
     if(f_count >= un_f_count_max)
         fin =  4                                                           ;
     end

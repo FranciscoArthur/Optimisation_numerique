@@ -75,7 +75,7 @@ if(algo==1)
     % Choix de la base positivement génératrice
     %
     D=[eye(2) -eye(2)]; % la base maximale
-    %D=[eye(2) -ones(2,1)] % la base minimale
+    %D=[eye(2) -ones(2,1)]; % la base minimale
     %Q=rand(2); D=[Q -Q]; % la base aleatoire
     %
     for i=1:4 % pour chaque point de part
