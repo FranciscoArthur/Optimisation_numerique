@@ -75,15 +75,38 @@ n          = length(tempx   )                                              ;
 r          = size(D,2)                                                     ;
 k          =   0                                                           ;
 fin        =   0                                                           ;
+
+f_test = @(xk,alphak,d) feval(une_f,xk+alphak*d)-(feval(une_f,xk));
+
 while(fin==0 && k < un_nit_max)
-    tempx_next = ...
+    isSuccess = false;
     
-    if(alpha <= 10^6) 
+    for search = 1:1:r
+        if (f_test(tempx,alpha,D(:,search)) < -(10^-2)/2*(D(1,search)^2+D(2,search)^2)*alpha^2)
+            isSuccess = true;
+            d = D(:,search);
+        end
+    end
+    
+    if (isSuccess == true) % iteration successful
+        tempx_next = tempx+alpha*d;
+        alpha = un_gamma*alpha;
+    else
+        tempx_next = tempx;
+        alpha = un_beta*alpha;
+    end
+   
+    fdex       = feval(une_f,tempx);
+    fdex_next  = feval(une_f,tempx_next);
+    
+    if(alpha <= 10^-6) 
         fin =  1                                                           ;
     end
     
-    if(abs((feval(une_f,tempx_next) - feval(une_f,tempx))/(tempx_next - tempx)) <= 10^6) % erreur
-        fin =  2                                                           ;
+    if(isSuccess == true) % erreur
+        if (abs((fdex_next - fdex)/(tempx_next - tempx)) <= 10^-6)
+            fin =  2                                                           ;
+        end
     end
     
     if(f_count >= un_f_count_max)
@@ -94,6 +117,7 @@ while(fin==0 && k < un_nit_max)
         fin =  3                                                           ;
     end
     
+    tempx = tempx_next;
     k = k +1 ;
 end
 x_opt    =   tempx                                                         ;
