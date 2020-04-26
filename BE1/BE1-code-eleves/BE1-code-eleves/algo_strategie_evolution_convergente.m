@@ -61,7 +61,7 @@ f_count    = 0                                                             ;
 % --------------------  Initialization --------------------------------
 % User defined input parameters (need to be edited)
 xmean      = un_x0'                                                        ;
-fmean      = feval(une_f,xmean)                                            ;
+%fmean      = feval(une_f,xmean)                                            ;
 sigma_es   = un_sigma_0                                                    ;
 N          = length(xmean   )                                              ;
 % Strategy parameter setting: Selection
@@ -97,8 +97,21 @@ while(fin==0 && k < un_nit_max)
     
 % Generate and evaluate lambda offspring
     for k=1:lambda
+        isSuccess = false;
+        
+        fmean      = feval(une_f,xmean);
+        
         arx(:,k) = xmean + sigma_es * B * (D .* randn(N,1)); % m + sigma^ES * Normal(0,C)
         arfitness(k) = feval(une_f, arx(:,k)); % objective function call
+        
+       if (feval(une_f,arx(:,k))<fmean-(10^-2)/2 * (sigma_es) ^2)
+           isSuccess = true;
+       end
+        
+        if (isSuccess == false)
+            sigma_es = un_beta*sigma_es;
+        end
+
     end
     
     % Sort by fitness and compute weighted mean into xmean
