@@ -100,11 +100,11 @@ while(fin==0 && k < un_nit_max)
         isSuccess = false;
         
         fmean      = feval(une_f,xmean);
-        
-        arx(:,k) = xmean + sigma_es * B * (D .* randn(N,1)); % m + sigma^ES * Normal(0,C)
+        Dk = D .* randn(N,1);
+        arx(:,k) = xmean + sigma_es * B * (Dk); % m + sigma^ES * Normal(0,C)
         arfitness(k) = feval(une_f, arx(:,k)); % objective function call
         
-       if (feval(une_f,arx(:,k))<fmean-(10^-2)/2 * (sigma_es) ^2)
+       if (feval(une_f,arx(:,k))<fmean-(10^-2)/2 * (Dk(1,1)^2+Dk(2,1)^2)*(sigma_es) ^2)
            isSuccess = true;
        end
         
